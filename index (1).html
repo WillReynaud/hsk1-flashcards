@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="HSK1 Flash">
+<title>HSK1 Flashcards</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: #000; }
+.app {
+  background: #000;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  transition: background 0.3s;
+}
+.app.light { background: #fff; }
+.top-bar {
+  position: absolute;
+  top: env(safe-area-inset-top, 16px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 0;
+}
+.counter { font-size: 12px; color: rgba(255,255,255,0.3); }
+.app.light .counter { color: rgba(0,0,0,0.25); }
+.theme-toggle {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.app.light .theme-toggle { border-color: rgba(0,0,0,0.15); color: rgba(0,0,0,0.4); }
+.card-area {
+  position: relative;
+  width: min(340px, 90vw);
+  height: min(420px, 55vh);
+}
+.card {
+  position: absolute;
+  inset: 0;
+  background: #111;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  border: 1px solid rgba(255,255,255,0.05);
+  will-change: transform;
+}
+.app.light .card { background: #f4f4f4; border-color: rgba(0,0,0,0.05); }
+.lesson-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.3px;
+}
+.app.light .lesson-badge { color: rgba(0,0,0,0.18); }
+.difficulty {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  gap: 4px;
+}
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+}
+.app.light .dot { background: rgba(0,0,0,0.1); }
+.dot.active { background: #c0392b; }
+.char {
+  font-size: clamp(72px, 20vw, 96px);
+  font-weight: 300;
+  line-height: 1;
+  color: #fff;
+  margin-bottom: 24px;
+}
+.app.light .char { color: #000; }
+.pinyin {
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  color: #111;
+  transition: color 0.25s;
+}
+.app.light .pinyin { color: #f4f4f4; }
+.translation {
+  font-size: 15px;
+  color: #111;
+  transition: color 0.25s;
+}
+.app.light .translation { color: #f4f4f4; }
+.card.revealed .pinyin { color: rgba(255,255,255,0.7); }
+.card.revealed .translation { color: rgba(255,255,255,0.45); }
+.app.light .card.revealed .pinyin { color: rgba(0,0,0,0.6); }
+.app.light .card.revealed .translation { color: rgba(0,0,0,0.38); }
+.overlay-left, .overlay-right {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+.overlay-left { background: #c0392b; justify-content: flex-start; padding-left: 28px; }
+.overlay-right { background: #27ae60; justify-content: flex-end; padding-right: 28px; }
+.overlay-icon { font-size: 32px; color: rgba(255,255,255,0.95); }
+.hint {
+  margin-top: 24px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.18);
+  text-align: center;
+}
+.app.light .hint { color: rgba(0,0,0,0.18); }
+.stats {
+  margin-top: 24px;
+  display: none;
+  gap: 32px;
+}
+.stat { text-align: center; }
+.stat-num { font-size: 22px; font-weight: 500; color: #fff; }
+.app.light .stat-num { color: #000; }
+.stat-label { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 3px; }
+.app.light .stat-label { color: rgba(0,0,0,0.25); }
+.stat-num.green { color: #27ae60; }
+.stat-num.red { color: #c0392b; }
+.stat-num.amber { color: #e67e22; }
+.progress {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+}
+.app.light .progress { background: rgba(0,0,0,0.06); }
+.progress-bar { height: 100%; background: #27ae60; transition: width 0.4s; }
+.done-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}
+.done-screen.visible { display: flex; }
+.done-score { font-size: 24px; font-weight: 500; color: #fff; }
+.app.light .done-score { color: #000; }
+.done-sub { font-size: 13px; color: rgba(255,255,255,0.35); max-width: 280px; line-height: 1.6; }
+.app.light .done-sub { color: rgba(0,0,0,0.35); }
+.btn {
+  margin-top: 4px;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.65);
+  padding: 12px 28px;
+  border-radius: 28px;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.app.light .btn { border-color: rgba(0,0,0,0.18); color: rgba(0,0,0,0.55); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top-bar">
+    <div class="counter" id="counter"></div>
+    <button class="theme-toggle" id="themeBtn">☀ clair</button>
+  </div>
+  <div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+  <div class="card-area" id="cardArea">
+    <div class="card" id="card">
+      <div class="overlay-left" id="overlayLeft"><span class="overlay-icon">✕</span></div>
+      <div class="overlay-right" id="overlayRight"><span class="overlay-icon">✓</span></div>
+      <div class="difficulty" id="difficulty"></div>
+      <div class="lesson-badge" id="lessonBadge"></div>
+      <div class="char" id="char"></div>
+      <div class="pinyin" id="pinyin"></div>
+      <div class="translation" id="trans"></div>
+    </div>
+  </div>
+
+  <div class="hint" id="hint">appuyer pour révéler · glisser pour juger</div>
+  <div class="stats" id="stats">
+    <div class="stat"><div class="stat-num green" id="knownEl">0</div><div class="stat-label">maîtrisés</div></div>
+    <div class="stat"><div class="stat-num amber" id="deckEl">0</div><div class="stat-label">restants</div></div>
+    <div class="stat"><div class="stat-num red" id="unknownEl">0</div><div class="stat-label">à revoir</div></div>
+  </div>
+
+  <div class="done-screen" id="doneScreen">
+    <div style="font-size:48px;">🎉</div>
+    <div class="done-score" id="doneScore"></div>
+    <div class="done-sub" id="doneSub"></div>
+    <button class="btn" id="restartBtn">tout recommencer</button>
+    <button class="btn" id="reviewBtn" style="display:none;">revoir les ratés</button>
+  </div>
+</div>
+
+<script>
+const ALL_CARDS = [
+  {char:'水',pinyin:'shuǐ',trans:'eau',lesson:'L1 — Nourriture'},
+  {char:'热',pinyin:'rè',trans:'chaud',lesson:'L1 — Nourriture'},
+  {char:'茶',pinyin:'chá',trans:'thé',lesson:'L1 — Nourriture'},
+  {char:'米饭',pinyin:'mǐ fàn',trans:'riz cuit',lesson:'L1 — Nourriture'},
+  {char:'菜',pinyin:'cài',trans:'plat / légume',lesson:'L1 — Nourriture'},
+  {char:'和',pinyin:'hé',trans:'et / avec',lesson:'L1 — Nourriture'},
+  {char:'这',pinyin:'zhè',trans:'ceci / ce',lesson:'L1 — Nourriture'},
+  {char:'中国',pinyin:'zhōng guó',trans:'Chine',lesson:'L2 — Nationalités'},
+  {char:'人',pinyin:'rén',trans:'personne / habitant',lesson:'L2 — Nationalités'},
+  {char:'我',pinyin:'wǒ',trans:'je / moi',lesson:'L2 — Nationalités'},
+  {char:'是',pinyin:'shì',trans:'être',lesson:'L2 — Nationalités'},
+  {char:'你',pinyin:'nǐ',trans:'tu / toi',lesson:'L2 — Nationalités'},
+  {char:'你呢',pinyin:'nǐ ne',trans:'et toi ?',lesson:'L2 — Nationalités'},
+  {char:'嗨',pinyin:'hāi',trans:'salut',lesson:'L2 — Nationalités'},
+  {char:'医生',pinyin:'yī shēng',trans:'médecin',lesson:'L3 — Professions'},
+  {char:'学生',pinyin:'xué shēng',trans:'étudiant',lesson:'L3 — Professions'},
+  {char:'老师',pinyin:'lǎo shī',trans:'professeur',lesson:'L3 — Professions'},
+  {char:'说',pinyin:'shuō',trans:'parler / dire',lesson:'L3 — Professions'},
+  {char:'对',pinyin:'duì',trans:'correct / exact',lesson:'L3 — Professions'},
+  {char:'他',pinyin:'tā',trans:'il / lui',lesson:'L4 — Études'},
+  {char:'她',pinyin:'tā',trans:'elle',lesson:'L4 — Études'},
+  {char:'不',pinyin:'bù',trans:'non / ne pas',lesson:'L4 — Études'},
+  {char:'喜欢',pinyin:'xǐ huān',trans:'aimer / apprécier',lesson:'L4 — Études'},
+  {char:'妈妈',pinyin:'mā ma',trans:'maman',lesson:'L5 — Famille'},
+  {char:'爸爸',pinyin:'bà ba',trans:'papa',lesson:'L5 — Famille'},
+  {char:'儿子',pinyin:'ér zi',trans:'fils',lesson:'L5 — Famille'},
+  {char:'女儿',pinyin:'nǚ ér',trans:'fille',lesson:'L5 — Famille'},
+  {char:'的',pinyin:'de',trans:'particule possession',lesson:'L5 — Famille'},
+  {char:'吗',pinyin:'ma',trans:'particule interrogative',lesson:'L5 — Famille'},
+  {char:'也',pinyin:'yě',trans:'aussi / également',lesson:'L5 — Famille'},
+  {char:'书',pinyin:'shū',trans:'livre',lesson:'L6 — Ville'},
+  {char:'买',pinyin:'mǎi',trans:'acheter',lesson:'L6 — Ville'},
+  {char:'去',pinyin:'qù',trans:'aller',lesson:'L6 — Ville'},
+  {char:'吃',pinyin:'chī',trans:'manger',lesson:'L6 — Ville'},
+  {char:'看',pinyin:'kàn',trans:'regarder / lire',lesson:'L6 — Ville'},
+  {char:'常常',pinyin:'cháng cháng',trans:'souvent',lesson:'L6 — Ville'},
+  {char:'一',pinyin:'yī',trans:'un / 1',lesson:'L7 — Café'},
+  {char:'三',pinyin:'sān',trans:'trois / 3',lesson:'L7 — Café'},
+  {char:'不客气',pinyin:'bú kè qi',trans:'de rien',lesson:'L7 — Café'},
+  {char:'谢谢',pinyin:'xiè xie',trans:'merci',lesson:'L7 — Café'},
+  {char:'两',pinyin:'liǎng',trans:'deux (compter)',lesson:'L7 — Café'},
+  {char:'要',pinyin:'yào',trans:'vouloir / besoin de',lesson:'L7 — Café'},
+  {char:'在',pinyin:'zài',trans:'être à / se trouver',lesson:'L8 — Voyage'},
+  {char:'哪里',pinyin:'nǎ lǐ',trans:'où',lesson:'L8 — Voyage'},
+  {char:'手机',pinyin:'shǒu jī',trans:'téléphone portable',lesson:'L8 — Voyage'},
+  {char:'钱',pinyin:'qián',trans:'argent',lesson:'L8 — Voyage'},
+  {char:'二',pinyin:'èr',trans:'deux / 2',lesson:'L8 — Voyage'},
+  {char:'今天',pinyin:'jīn tiān',trans:'aujourd\'hui',lesson:'L9 — Semestre'},
+  {char:'同学',pinyin:'tóng xué',trans:'camarade de classe',lesson:'L9 — Semestre'},
+  {char:'我们',pinyin:'wǒ men',trans:'nous',lesson:'L9 — Semestre'},
+  {char:'有',pinyin:'yǒu',trans:'avoir',lesson:'L9 — Semestre'},
+  {char:'都',pinyin:'dōu',trans:'tout / tous',lesson:'L9 — Semestre'},
+  {char:'新',pinyin:'xīn',trans:'nouveau / nouvelle',lesson:'L9 — Semestre'},
+  {char:'游泳',pinyin:'yóu yǒng',trans:'nager',lesson:'L10 — Sports'},
+  {char:'跑步',pinyin:'pǎo bù',trans:'courir',lesson:'L10 — Sports'},
+  {char:'篮球',pinyin:'lán qiú',trans:'basketball',lesson:'L10 — Sports'},
+  {char:'排球',pinyin:'pái qiú',trans:'volleyball',lesson:'L10 — Sports'},
+  {char:'网球',pinyin:'wǎng qiú',trans:'tennis',lesson:'L10 — Sports'},
+  {char:'打',pinyin:'dǎ',trans:'jouer à (sport)',lesson:'L10 — Sports'},
+  {char:'运动',pinyin:'yùn dòng',trans:'sport',lesson:'L10 — Sports'},
+  {char:'比较',pinyin:'bǐ jiào',trans:'relativement / comparer',lesson:'L10 — Sports'},
+  {char:'非常',pinyin:'fēi cháng',trans:'extrêmement',lesson:'L10 — Sports'},
+  {char:'还是',pinyin:'hái shì',trans:'ou bien',lesson:'L10 — Sports'},
+];
+
+const STORAGE_KEY = 'duo10_sr_v2';
+let cardStates = {};
+try { const s = localStorage.getItem(STORAGE_KEY); if (s) cardStates = JSON.parse(s); } catch(e) {}
+
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cardStates)); } catch(e) {} }
+function getCS(char) { return cardStates[char] || {errors:0,seen:0,mastered:false}; }
+function setCS(char, st) { cardStates[char] = st; saveState(); }
+
+let deck=[], current=0, sessionKnown=0, sessionUnknown=0;
+let revealed=false, dragging=false, startX=0, currentDX=0;
+
+function buildDeck() {
+  const unmastered = ALL_CARDS.filter(c => !getCS(c.char).mastered);
+  if (unmastered.length === 0) return [...ALL_CARDS];
+  const weighted = [];
+  unmastered.forEach(c => {
+    const reps = Math.min((getCS(c.char).errors||0)+1, 4);
+    for (let i=0;i<reps;i++) weighted.push(c);
+  });
+  for (let i=weighted.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [weighted[i],weighted[j]]=[weighted[j],weighted[i]];
+  }
+  return weighted.slice(0, Math.min(weighted.length, 25));
+}
+
+function renderDots(errors) {
+  const el = document.getElementById('difficulty');
+  el.innerHTML = '';
+  for (let i=0;i<3;i++) {
+    const d = document.createElement('div');
+    d.className = 'dot'+(i<Math.min(errors,3)?' active':'');
+    el.appendChild(d);
+  }
+}
+
+function loadCard() {
+  if (current >= deck.length) { showDone(); return; }
+  const c = deck[current];
+  const st = getCS(c.char);
+  document.getElementById('char').textContent = c.char;
+  document.getElementById('pinyin').textContent = c.pinyin;
+  document.getElementById('trans').textContent = c.trans;
+  document.getElementById('lessonBadge').textContent = c.lesson;
+  const card = document.getElementById('card');
+  card.classList.remove('revealed');
+  card.style.transform = '';
+  card.style.transition = '';
+  document.getElementById('overlayLeft').style.opacity = 0;
+  document.getElementById('overlayRight').style.opacity = 0;
+  revealed = false;
+  renderDots(st.errors||0);
+  const mastered = ALL_CARDS.filter(c=>getCS(c.char).mastered).length;
+  document.getElementById('progressBar').style.width = Math.round(mastered/ALL_CARDS.length*100)+'%';
+  document.getElementById('counter').textContent = (current+1)+' / '+deck.length;
+  if (current > 0) { document.getElementById('stats').style.display='flex'; document.getElementById('hint').style.display='none'; }
+  document.getElementById('knownEl').textContent = sessionKnown;
+  document.getElementById('deckEl').textContent = deck.length-current;
+  document.getElementById('unknownEl').textContent = sessionUnknown;
+}
+
+function swipe(dir) {
+  const c = deck[current];
+  const st = getCS(c.char);
+  st.seen = (st.seen||0)+1;
+  if (dir > 0) {
+    sessionKnown++;
+    if ((st.errors||0)===0 && st.seen>=2) st.mastered=true;
+    else if ((st.errors||0)>0) st.errors=Math.max(0,st.errors-1);
+  } else {
+    sessionUnknown++;
+    st.errors=(st.errors||0)+1;
+    st.mastered=false;
+  }
+  setCS(c.char, st);
+  const card = document.getElementById('card');
+  card.style.transition='transform 0.28s ease';
+  card.style.transform='translateX('+(dir>0?700:-700)+'px) rotate('+(dir*10)+'deg)';
+  current++;
+  setTimeout(loadCard, 290);
+}
+
+function showDone() {
+  document.getElementById('cardArea').style.display='none';
+  document.getElementById('stats').style.display='none';
+  document.getElementById('hint').style.display='none';
+  document.getElementById('counter').style.display='none';
+  const mastered=ALL_CARDS.filter(c=>getCS(c.char).mastered).length;
+  document.getElementById('doneScore').textContent=mastered+' / '+ALL_CARDS.length+' maîtrisés';
+  const toReview=ALL_CARDS.filter(c=>(getCS(c.char).errors||0)>0).length;
+  document.getElementById('doneSub').textContent=toReview>0
+    ? toReview+' caractère(s) seront prioritaires à la prochaine session.'
+    : 'Excellent ! Revenez demain pour consolider.';
+  if (toReview>0) document.getElementById('reviewBtn').style.display='';
+  document.getElementById('doneScreen').classList.add('visible');
+}
+
+const card = document.getElementById('card');
+card.addEventListener('click', ()=>{ if(!dragging){revealed=!revealed;card.classList.toggle('revealed',revealed);} });
+card.addEventListener('mousedown', e=>{ startX=e.clientX;dragging=false;currentDX=0; });
+document.addEventListener('mousemove', e=>{
+  if(e.buttons!==1)return;
+  const dx=e.clientX-startX;
+  if(Math.abs(dx)>6)dragging=true;
+  if(!dragging)return;
+  currentDX=dx;
+  card.style.transition='none';
+  card.style.transform='translateX('+dx+'px) rotate('+(dx*0.04)+'deg)';
+  const pct=Math.min(Math.abs(dx)/90,1);
+  document.getElementById(dx<0?'overlayLeft':'overlayRight').style.opacity=pct*0.9;
+  document.getElementById(dx<0?'overlayRight':'overlayLeft').style.opacity=0;
+});
+document.addEventListener('mouseup', e=>{
+  if(!dragging)return;
+  const dx=e.clientX-startX;
+  if(Math.abs(dx)>90)swipe(dx>0?1:-1);
+  else{card.style.transition='transform 0.2s';card.style.transform='';document.getElementById('overlayLeft').style.opacity=0;document.getElementById('overlayRight').style.opacity=0;}
+  setTimeout(()=>{dragging=false;},60);
+});
+card.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;dragging=false;currentDX=0;},{passive:true});
+card.addEventListener('touchmove',e=>{
+  const dx=e.touches[0].clientX-startX;
+  if(Math.abs(dx)>6)dragging=true;
+  if(!dragging)return;
+  currentDX=dx;
+  card.style.transition='none';
+  card.style.transform='translateX('+dx+'px) rotate('+(dx*0.04)+'deg)';
+  const pct=Math.min(Math.abs(dx)/90,1);
+  document.getElementById(dx<0?'overlayLeft':'overlayRight').style.opacity=pct*0.9;
+  document.getElementById(dx<0?'overlayRight':'overlayLeft').style.opacity=0;
+},{passive:true});
+card.addEventListener('touchend',()=>{
+  if(!dragging){revealed=!revealed;card.classList.toggle('revealed',revealed);return;}
+  if(Math.abs(currentDX)>90)swipe(currentDX>0?1:-1);
+  else{card.style.transition='transform 0.2s';card.style.transform='';document.getElementById('overlayLeft').style.opacity=0;document.getElementById('overlayRight').style.opacity=0;}
+  dragging=false;
+});
+
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  document.getElementById('app').classList.toggle('light');
+  document.getElementById('themeBtn').textContent=document.getElementById('app').classList.contains('light')?'● sombre':'☀ clair';
+});
+document.getElementById('restartBtn').addEventListener('click',()=>{
+  Object.keys(cardStates).forEach(k=>{cardStates[k]={errors:0,seen:0,mastered:false};});
+  saveState();restart();
+});
+document.getElementById('reviewBtn').addEventListener('click',restart);
+
+function restart(){
+  current=0;sessionKnown=0;sessionUnknown=0;revealed=false;
+  deck=buildDeck();
+  document.getElementById('cardArea').style.display='';
+  document.getElementById('hint').style.display='';
+  document.getElementById('counter').style.display='';
+  document.getElementById('stats').style.display='none';
+  document.getElementById('doneScreen').classList.remove('visible');
+  document.getElementById('reviewBtn').style.display='none';
+  loadCard();
+}
+
+deck=buildDeck();
+loadCard();
+</script>
+</body>
+</html>
