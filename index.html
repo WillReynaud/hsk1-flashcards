@@ -1,485 +1,932 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="HSK1 Flash">
-<title>HSK1 Flashcards</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-html, body { height: 100%; background: #000; overflow: hidden; }
-.app { background: #000; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; transition: background 0.3s; }
-.app.light { background: #fff; }
-.menu { width: 100%; height: 100%; overflow-y: auto; display: flex; flex-direction: column; padding: 60px 24px 32px; -webkit-overflow-scrolling: touch; }
-.menu-title { font-size: 22px; font-weight: 500; color: #fff; margin-bottom: 6px; }
-.app.light .menu-title { color: #000; }
-.menu-sub { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 28px; }
-.app.light .menu-sub { color: rgba(0,0,0,0.35); }
-.lesson-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 0.5px solid rgba(255,255,255,0.07); cursor: pointer; }
-.app.light .lesson-row { border-color: rgba(0,0,0,0.07); }
-.lesson-row:last-of-type { border-bottom: none; }
-.lesson-info { display: flex; flex-direction: column; gap: 3px; }
-.lesson-name { font-size: 15px; color: #fff; }
-.app.light .lesson-name { color: #000; }
-.lesson-theme { font-size: 11px; color: rgba(255,255,255,0.4); }
-.app.light .lesson-theme { color: rgba(0,0,0,0.35); }
-.lesson-count { font-size: 11px; color: rgba(255,255,255,0.25); }
-.app.light .lesson-count { color: rgba(0,0,0,0.25); }
-.checkbox { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.app.light .checkbox { border-color: rgba(0,0,0,0.2); }
-.checkbox.checked { background: #27ae60; border-color: #27ae60; }
-.checkbox.checked::after { content: '✓'; color: #fff; font-size: 13px; }
-.menu-footer { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
-.start-btn { background: #27ae60; border: none; color: #fff; padding: 16px; border-radius: 14px; font-size: 16px; cursor: pointer; -webkit-appearance: none; }
-.start-btn:disabled { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.2); }
-.app.light .start-btn:disabled { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.2); }
-.select-all-btn { background: none; border: 0.5px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); padding: 12px; border-radius: 14px; font-size: 13px; cursor: pointer; }
-.app.light .select-all-btn { border-color: rgba(0,0,0,0.15); color: rgba(0,0,0,0.4); }
-.top-bar { position: absolute; top: env(safe-area-inset-top, 16px); left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 0; z-index: 10; }
-.counter { font-size: 12px; color: rgba(255,255,255,0.3); }
-.app.light .counter { color: rgba(0,0,0,0.25); }
-.top-right { display: flex; gap: 10px; align-items: center; }
-.theme-toggle { background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); padding: 6px 14px; border-radius: 20px; font-size: 11px; cursor: pointer; }
-.app.light .theme-toggle { border-color: rgba(0,0,0,0.15); color: rgba(0,0,0,0.4); }
-.menu-btn { background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); padding: 6px 14px; border-radius: 20px; font-size: 11px; cursor: pointer; }
-.app.light .menu-btn { border-color: rgba(0,0,0,0.15); color: rgba(0,0,0,0.4); }
-.game { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
-.game.active { display: flex; }
-.card-area { position: relative; width: min(340px, 90vw); height: min(420px, 55vh); }
-.card { position: absolute; inset: 0; background: #111; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); will-change: transform; }
-.app.light .card { background: #f4f4f4; border-color: rgba(0,0,0,0.05); }
-.lesson-badge { position: absolute; top: 14px; left: 14px; font-size: 10px; color: rgba(255,255,255,0.2); }
-.app.light .lesson-badge { color: rgba(0,0,0,0.18); }
-.difficulty { position: absolute; top: 14px; right: 14px; display: flex; gap: 4px; }
-.dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.12); }
-.app.light .dot { background: rgba(0,0,0,0.1); }
-.dot.active { background: #c0392b; }
-.char { font-size: clamp(64px, 18vw, 90px); font-weight: 300; line-height: 1; color: #fff; margin-bottom: 24px; pointer-events: none; text-align: center; padding: 0 16px; }
-.app.light .char { color: #000; }
-.pinyin { font-size: 18px; letter-spacing: 0.5px; margin-bottom: 10px; color: #111; transition: color 0.25s; pointer-events: none; }
-.app.light .pinyin { color: #f4f4f4; }
-.translation { font-size: 14px; color: #111; transition: color 0.25s; pointer-events: none; text-align: center; padding: 0 20px; }
-.app.light .translation { color: #f4f4f4; }
-.card.revealed .pinyin { color: rgba(255,255,255,0.7); }
-.card.revealed .translation { color: rgba(255,255,255,0.45); }
-.app.light .card.revealed .pinyin { color: rgba(0,0,0,0.6); }
-.app.light .card.revealed .translation { color: rgba(0,0,0,0.38); }
-.overlay-left, .overlay-right { position: absolute; inset: 0; border-radius: 20px; opacity: 0; pointer-events: none; display: flex; align-items: center; }
-.overlay-left { background: #c0392b; justify-content: flex-start; padding-left: 28px; }
-.overlay-right { background: #27ae60; justify-content: flex-end; padding-right: 28px; }
-.overlay-icon { font-size: 32px; color: rgba(255,255,255,0.95); pointer-events: none; }
-.hint { margin-top: 24px; font-size: 11px; color: rgba(255,255,255,0.18); text-align: center; }
-.app.light .hint { color: rgba(0,0,0,0.18); }
-.stats { margin-top: 24px; display: none; gap: 32px; }
-.stat { text-align: center; }
-.stat-num { font-size: 22px; font-weight: 500; color: #fff; }
-.app.light .stat-num { color: #000; }
-.stat-label { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 3px; }
-.app.light .stat-label { color: rgba(0,0,0,0.25); }
-.stat-num.green { color: #27ae60; }
-.stat-num.red { color: #c0392b; }
-.stat-num.amber { color: #e67e22; }
-.progress { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.06); }
-.app.light .progress { background: rgba(0,0,0,0.06); }
-.progress-bar { height: 100%; background: #27ae60; transition: width 0.4s; }
-.done-screen { display: none; flex-direction: column; align-items: center; gap: 16px; padding: 24px; text-align: center; }
-.done-screen.visible { display: flex; }
-.done-score { font-size: 24px; font-weight: 500; color: #fff; }
-.app.light .done-score { color: #000; }
-.done-sub { font-size: 13px; color: rgba(255,255,255,0.35); max-width: 280px; line-height: 1.6; }
-.app.light .done-sub { color: rgba(0,0,0,0.35); }
-.btn { margin-top: 4px; background: none; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.65); padding: 12px 28px; border-radius: 28px; font-size: 13px; cursor: pointer; -webkit-appearance: none; }
-.app.light .btn { border-color: rgba(0,0,0,0.18); color: rgba(0,0,0,0.55); }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mandarin · HSK1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #e8e8e8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .app {
+            max-width: 650px;
+            width: 100%;
+            background: transparent;
+            position: relative;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 0.5rem;
+        }
+
+        .desktop-buttons {
+            display: none;
+            gap: 0.75rem;
+        }
+
+        .desktop-btn {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.1s;
+            font-family: inherit;
+            color: #333;
+        }
+
+        .desktop-btn:active {
+            transform: scale(0.96);
+        }
+
+        .desktop-btn.good {
+            background: #e0e8e0;
+            border-color: #aaa;
+        }
+
+        .desktop-btn.bad {
+            background: #f0e0e0;
+            border-color: #aaa;
+        }
+
+        @media (min-width: 769px) {
+            .desktop-buttons {
+                display: flex;
+            }
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+            color: #666;
+            padding: 0 0.2rem;
+            background: #f5f5f5;
+            border-radius: 60px;
+            padding: 0.4rem 1rem;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .pinyin-toggle {
+            background: none;
+            border: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            transition: 0.1s;
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .pinyin-toggle.active {
+            background: #333;
+            color: white;
+        }
+
+        .pinyin-toggle.inactive {
+            background: #ccc;
+            color: #888;
+        }
+
+        .param-btn {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: #555;
+        }
+
+        .card-zone {
+            position: relative;
+            touch-action: pan-y pinch-zoom;
+        }
+
+        .card {
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            border: 1px solid #ddd;
+            cursor: pointer;
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .swipe-indicator {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 0;
+            background-color: transparent;
+            transition: width 0.02s linear;
+            z-index: 2;
+            pointer-events: none;
+            border-radius: 32px;
+        }
+
+        .swipe-left {
+            left: 0;
+            background: rgba(200, 70, 60, 0.6);
+        }
+
+        .swipe-right {
+            right: 0;
+            background: rgba(60, 150, 80, 0.6);
+        }
+
+        .chinese {
+            font-size: 3.2rem;
+            font-weight: 460;
+            color: #111;
+            letter-spacing: 2px;
+            font-family: 'PingFang SC', 'Noto Sans CJK SC', system-ui;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .pinyin-top {
+            font-size: 1rem;
+            color: #888;
+            font-weight: 400;
+            margin-bottom: 1.2rem;
+        }
+
+        .definition {
+            font-size: 1.1rem;
+            font-weight: 430;
+            color: #444;
+            border-top: 1px solid #eee;
+            padding-top: 1.2rem;
+            width: 100%;
+            margin-top: 0.3rem;
+            min-height: 80px;
+            line-height: 1.6;
+        }
+
+        .definition-line {
+            margin-bottom: 0.3rem;
+        }
+
+        .pinyin-def {
+            color: #888;
+            font-size: 1rem;
+        }
+
+        .meaning-def {
+            color: #444;
+            font-size: 1.1rem;
+        }
+
+        /* MENU PARAMETRAGE (slide from bottom) */
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .settings-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .settings-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 28px 28px 0 0;
+            max-height: 70vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            padding: 1.5rem;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .settings-panel.visible {
+            transform: translateY(0);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .settings-header h3 {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .close-settings {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 0.5px solid #f0f0f0;
+        }
+
+        .skill-checkbox {
+            width: 24px;
+            height: 24px;
+            margin-right: 1rem;
+            cursor: pointer;
+        }
+
+        .skill-name {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .skill-count {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.1s;
+        }
+
+        .modal.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 500px;
+            width: 88%;
+            border-radius: 28px;
+            padding: 1.6rem;
+            border: 1px solid #ddd;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            font-weight: 500;
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #888;
+            padding-left: 0.7rem;
+        }
+
+        .lesson-section {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .lesson-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+
+        .lesson-value {
+            color: #2a2a2a;
+        }
+
+        .example-trans {
+            margin-top: 0.3rem;
+            font-style: italic;
+            color: #555;
+            border-left: 2px solid #ccc;
+            padding-left: 0.6rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: 1px solid #ccc;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            margin-top: 0.8rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #555;
+            width: 100%;
+        }
+
+        .reset-area {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .reset-btn {
+            background: none;
+            border: none;
+            font-size: 0.7rem;
+            color: #888;
+            padding: 0.3rem 1rem;
+            cursor: pointer;
+            border-radius: 60px;
+        }
+
+        @media (max-width: 550px) {
+            .chinese { font-size: 2.6rem; }
+            .definition { font-size: 0.95rem; }
+            .card { min-height: 380px; padding: 1.5rem; }
+            .stats { font-size: 0.7rem; }
+            .pinyin-toggle { font-size: 0.7rem; padding: 0.2rem 0.7rem; }
+        }
+    </style>
 </head>
 <body>
-<div class="app" id="app">
-  <div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-  <div class="top-bar" id="topBar" style="display:none;">
-    <div class="counter" id="counter"></div>
-    <div class="top-right">
-      <button class="menu-btn" id="menuBtn">≡ leçons</button>
-      <button class="theme-toggle" id="themeBtn">☀ clair</button>
+<div class="app">
+    <div class="toolbar">
+        <button class="param-btn" id="settingsBtn">paramétrage</button>
+        <div class="desktop-buttons" id="desktopButtons">
+            <button class="desktop-btn bad" id="desktopBadBtn">je ne sais pas</button>
+            <button class="desktop-btn good" id="desktopGoodBtn">je sais</button>
+        </div>
     </div>
-  </div>
 
-  <div class="menu" id="menuScreen">
-    <div class="menu-title">HSK1 Flashcards</div>
-    <div class="menu-sub">Sélectionne les leçons à réviser</div>
-    <div id="lessonList"></div>
-    <div class="menu-footer">
-      <button class="select-all-btn" id="selectAllBtn">tout sélectionner</button>
-      <button class="start-btn" id="startBtn" disabled>commencer</button>
+    <div class="stats">
+        <div class="stat-item">à réviser <span id="statRemaining">0</span></div>
+        <button class="pinyin-toggle active" id="pinyinToggleBtn">pinyin</button>
+        <div class="stat-item">connus <span id="statKnown">0</span></div>
     </div>
-  </div>
 
-  <div class="game" id="gameScreen">
-    <div class="card-area" id="cardArea">
-      <div class="card" id="card">
-        <div class="overlay-left" id="overlayLeft"><span class="overlay-icon">✕</span></div>
-        <div class="overlay-right" id="overlayRight"><span class="overlay-icon">✓</span></div>
-        <div class="difficulty" id="difficulty"></div>
-        <div class="lesson-badge" id="lessonBadge"></div>
-        <div class="char" id="char"></div>
-        <div class="pinyin" id="pinyin"></div>
-        <div class="translation" id="trans"></div>
-      </div>
+    <div class="card-zone" id="cardZone">
+        <div class="card" id="card">
+            <div class="swipe-indicator swipe-left" id="swipeLeftIndicator"></div>
+            <div class="swipe-indicator swipe-right" id="swipeRightIndicator"></div>
+            <div class="chinese" id="chineseText">-</div>
+            <div class="pinyin-top" id="pinyinTop"></div>
+            <div class="definition" id="definitionContainer">
+                <div class="definition-line" id="pinyinDefLine" style="display: none;"></div>
+                <div class="definition-line" id="meaningDefLine"></div>
+            </div>
+        </div>
     </div>
-    <div class="hint" id="hint">toucher pour révéler · glisser pour juger</div>
-    <div class="stats" id="stats">
-      <div class="stat"><div class="stat-num green" id="knownEl">0</div><div class="stat-label">maîtrisés</div></div>
-      <div class="stat"><div class="stat-num amber" id="deckEl">0</div><div class="stat-label">restants</div></div>
-      <div class="stat"><div class="stat-num red" id="unknownEl">0</div><div class="stat-label">à revoir</div></div>
+</div>
+
+<!-- MENU PARAMETRAGE (slide from bottom) -->
+<div id="settingsOverlay" class="settings-overlay">
+    <div id="settingsPanel" class="settings-panel">
+        <div class="settings-header">
+            <h3>choisir les skills</h3>
+            <button class="close-settings" id="closeSettingsBtn">✕</button>
+        </div>
+        <div class="skill-list" id="skillList"></div>
+        <div class="reset-area" style="margin-top: 1rem;">
+            <button class="reset-btn" id="resetProgressBtn">réinitialiser toute progression</button>
+        </div>
     </div>
-    <div class="done-screen" id="doneScreen">
-      <div style="font-size:48px;">🎉</div>
-      <div class="done-score" id="doneScore"></div>
-      <div class="done-sub" id="doneSub"></div>
-      <button class="btn" id="restartBtn">recommencer</button>
-      <button class="btn" id="reviewBtn" style="display:none;">revoir les ratés</button>
-      <button class="btn" id="backBtn">changer de leçons</button>
+</div>
+
+<!-- MODAL LEÇON -->
+<div id="lessonModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">leçon</h3>
+        <div class="lesson-section">
+            <div class="lesson-label">décomposition</div>
+            <div class="lesson-value" id="modalDecomp">-</div>
+        </div>
+        <div class="lesson-section">
+            <div class="lesson-label">mnémonique</div>
+            <div class="lesson-value" id="modalMnemonic">-</div>
+        </div>
+        <div class="lesson-section">
+            <div class="lesson-label">phrase d'exemple</div>
+            <div class="lesson-value" id="modalExample">-</div>
+            <div class="example-trans" id="modalExampleTrans"></div>
+        </div>
+        <div class="lesson-section" id="tipSection" style="display: none;">
+            <div class="lesson-label">astuce</div>
+            <div class="lesson-value" id="modalTip">-</div>
+        </div>
+        <button class="close-modal" id="closeModalBtn">fermer</button>
     </div>
-  </div>
 </div>
 
 <script>
-const LESSONS = [
-  { id:'L1', name:'L1', theme:'Nourriture', cards:[
-    {char:'和', pinyin:'hé', trans:'et / avec'},
-    {char:'咖啡', pinyin:'kā fēi', trans:'café'},
-    {char:'水', pinyin:'shuǐ', trans:'eau'},
-    {char:'汤', pinyin:'tāng', trans:'soupe'},
-    {char:'热', pinyin:'rè', trans:'chaud'},
-    {char:'米饭', pinyin:'mǐ fàn', trans:'riz'},
-    {char:'粥', pinyin:'zhōu', trans:'bouillie / porridge'},
-    {char:'茶', pinyin:'chá', trans:'thé'},
-    {char:'豆腐', pinyin:'dòu fǔ', trans:'tofu'},
-    {char:'这是', pinyin:'zhè shì', trans:'c\'est'},
-  ]},
-  { id:'L2', name:'L2', theme:'Nationalités', cards:[
-    {char:'中国', pinyin:'zhōng guó', trans:'Chine / chinois'},
-    {char:'人', pinyin:'rén', trans:'personne / habitant'},
-    {char:'你呢', pinyin:'nǐ ne', trans:'et toi ?'},
-    {char:'嗨', pinyin:'hāi', trans:'salut'},
-    {char:'我', pinyin:'wǒ', trans:'je / moi'},
-    {char:'日本', pinyin:'rì běn', trans:'Japon / japonais'},
-    {char:'是', pinyin:'shì', trans:'être'},
-    {char:'美国', pinyin:'měi guó', trans:'États-Unis / américain'},
-    {char:'韩国', pinyin:'hán guó', trans:'Corée / coréen'},
-  ]},
-  { id:'L3', name:'L3', theme:'Professions', cards:[
-    {char:'中文', pinyin:'zhōng wén', trans:'chinois (langue)'},
-    {char:'你', pinyin:'nǐ', trans:'tu / toi'},
-    {char:'医生', pinyin:'yī shēng', trans:'médecin'},
-    {char:'学生', pinyin:'xué shēng', trans:'étudiant'},
-    {char:'对', pinyin:'duì', trans:'correct / exact'},
-    {char:'对不对', pinyin:'duì bù duì', trans:'n\'est-ce pas ?'},
-    {char:'律师', pinyin:'lǜ shī', trans:'avocat'},
-    {char:'老师', pinyin:'lǎo shī', trans:'professeur'},
-    {char:'英文', pinyin:'yīng wén', trans:'anglais (langue)'},
-    {char:'说', pinyin:'shuō', trans:'parler / dire'},
-  ]},
-  { id:'L4', name:'L4', theme:'Études', cards:[
-    {char:'上', pinyin:'shàng', trans:'sur / aller à'},
-    {char:'不', pinyin:'bù', trans:'non / ne pas'},
-    {char:'他', pinyin:'tā', trans:'il / lui'},
-    {char:'喜欢', pinyin:'xǐ huān', trans:'aimer / apprécier'},
-    {char:'大学生', pinyin:'dà xué shēng', trans:'étudiant universitaire'},
-    {char:'她', pinyin:'tā', trans:'elle'},
-    {char:'数学', pinyin:'shù xué', trans:'mathématiques'},
-    {char:'课', pinyin:'kè', trans:'cours'},
-    {char:'音乐', pinyin:'yīn lè', trans:'musique'},
-  ]},
-  { id:'L5', name:'L5', theme:'Famille', cards:[
-    {char:'中学生', pinyin:'zhōng xué shēng', trans:'collégien'},
-    {char:'也', pinyin:'yě', trans:'aussi / également'},
-    {char:'儿子', pinyin:'ér zi', trans:'fils'},
-    {char:'加拿大', pinyin:'jiā ná dà', trans:'Canada'},
-    {char:'吗', pinyin:'ma', trans:'particule interrogative'},
-    {char:'女儿', pinyin:'nǚ ér', trans:'fille'},
-    {char:'妈妈', pinyin:'mā mā', trans:'maman / mère'},
-    {char:'爸爸', pinyin:'bà bà', trans:'papa / père'},
-    {char:'的', pinyin:'de', trans:'particule de possession'},
-    {char:'老公', pinyin:'lǎo gōng', trans:'mari'},
-    {char:'老婆', pinyin:'lǎo pó', trans:'femme / épouse'},
-    {char:'英国', pinyin:'yīng guó', trans:'Royaume-Uni'},
-  ]},
-  { id:'L6', name:'L6', theme:'Ville', cards:[
-    {char:'不常', pinyin:'bù cháng', trans:'pas souvent'},
-    {char:'书', pinyin:'shū', trans:'livre'},
-    {char:'书店', pinyin:'shū diàn', trans:'librairie'},
-    {char:'买', pinyin:'mǎi', trans:'acheter'},
-    {char:'去', pinyin:'qù', trans:'aller'},
-    {char:'吃', pinyin:'chī', trans:'manger'},
-    {char:'常常', pinyin:'cháng cháng', trans:'souvent'},
-    {char:'看', pinyin:'kàn', trans:'regarder / lire'},
-    {char:'菜', pinyin:'cài', trans:'plat / cuisine'},
-    {char:'超市', pinyin:'chāo shì', trans:'supermarché'},
-    {char:'零食', pinyin:'líng shí', trans:'collation / snack'},
-    {char:'韩文', pinyin:'hán wén', trans:'coréen (langue)'},
-    {char:'饭馆', pinyin:'fàn guǎn', trans:'restaurant'},
-  ]},
-  { id:'L7', name:'L7', theme:'Café', cards:[
-    {char:'一', pinyin:'yī', trans:'un / 1'},
-    {char:'三', pinyin:'sān', trans:'trois / 3'},
-    {char:'不客气', pinyin:'bù kè qì', trans:'de rien'},
-    {char:'两', pinyin:'liǎng', trans:'deux (pour compter)'},
-    {char:'冰', pinyin:'bīng', trans:'glace / froid'},
-    {char:'奶茶', pinyin:'nǎi chá', trans:'thé au lait'},
-    {char:'杯', pinyin:'bēi', trans:'tasse / verre'},
-    {char:'牛奶', pinyin:'niú nǎi', trans:'lait'},
-    {char:'糖', pinyin:'táng', trans:'sucre'},
-    {char:'绿茶', pinyin:'lǜ chá', trans:'thé vert'},
-    {char:'要', pinyin:'yào', trans:'vouloir / besoin de'},
-    {char:'谢谢', pinyin:'xiè xiè', trans:'merci'},
-    {char:'这', pinyin:'zhè', trans:'ceci / ce'},
-  ]},
-  { id:'L8', name:'L8', theme:'Voyage', cards:[
-    {char:'二', pinyin:'èr', trans:'deux / 2'},
-    {char:'哎呀', pinyin:'āi ya', trans:'oh là là !'},
-    {char:'哪里', pinyin:'nǎ lǐ', trans:'où'},
-    {char:'在', pinyin:'zài', trans:'être à / se trouver'},
-    {char:'手机', pinyin:'shǒu jī', trans:'téléphone portable'},
-    {char:'洗手间', pinyin:'xǐ shǒu jiān', trans:'toilettes'},
-    {char:'火车', pinyin:'huǒ chē', trans:'train'},
-    {char:'火车站', pinyin:'huǒ chē zhàn', trans:'gare'},
-    {char:'站台', pinyin:'zhàn tái', trans:'quai'},
-    {char:'行李', pinyin:'xíng lǐ', trans:'bagage'},
-    {char:'车票', pinyin:'chē piào', trans:'billet de train'},
-    {char:'这里', pinyin:'zhè lǐ', trans:'ici'},
-    {char:'钱包', pinyin:'qián bāo', trans:'portefeuille'},
-  ]},
-  { id:'L9', name:'L9', theme:'Semestre', cards:[
-    {char:'个', pinyin:'gè', trans:'classificateur général'},
-    {char:'今天', pinyin:'jīn tiān', trans:'aujourd\'hui'},
-    {char:'你好', pinyin:'nǐ hǎo', trans:'bonjour'},
-    {char:'历史', pinyin:'lì shǐ', trans:'histoire'},
-    {char:'同学', pinyin:'tóng xué', trans:'camarade de classe'},
-    {char:'四', pinyin:'sì', trans:'quatre / 4'},
-    {char:'我们', pinyin:'wǒ men', trans:'nous'},
-    {char:'新', pinyin:'xīn', trans:'nouveau / nouvelle'},
-    {char:'有', pinyin:'yǒu', trans:'avoir'},
-    {char:'真的吗', pinyin:'zhēn de ma', trans:'vraiment ?'},
-    {char:'都', pinyin:'dōu', trans:'tout / tous'},
-  ]},
-  { id:'L10', name:'L10', theme:'Sports', cards:[
-    {char:'你们', pinyin:'nǐ men', trans:'vous (pluriel)'},
-    {char:'健身房', pinyin:'jiàn shēn fáng', trans:'salle de sport'},
-    {char:'公园', pinyin:'gōng yuán', trans:'parc'},
-    {char:'打', pinyin:'dǎ', trans:'jouer à (sport)'},
-    {char:'排球', pinyin:'pái qiú', trans:'volleyball'},
-    {char:'比较', pinyin:'bǐ jiào', trans:'relativement / comparer'},
-    {char:'游泳', pinyin:'yóu yǒng', trans:'nager'},
-    {char:'篮球', pinyin:'lán qiú', trans:'basketball'},
-    {char:'网球', pinyin:'wǎng qiú', trans:'tennis'},
-    {char:'跑步', pinyin:'pǎo bù', trans:'courir'},
-    {char:'运动', pinyin:'yùn dòng', trans:'sport'},
-    {char:'还是', pinyin:'hái shì', trans:'ou bien'},
-    {char:'非常', pinyin:'fēi cháng', trans:'extrêmement'},
-  ]},
-];
+    // ============================================================
+    // SKILL 1: FOOD (complet avec leçons détaillées)
+    // ============================================================
+    const SKILLS = {
+        1: {
+            name: "Food - Nourriture et boissons",
+            vocab: [
+                { hanzi: "和", pinyin: "hé", meaning: "et, avec, communiquer", decomposition: "和 (hé) = 禾 (hé: céréale) + 口 (kǒu: bouche)", mnemonic: "La bouche qui parle de céréales = et", example: "我和你一起去。", exampleTrans: "Moi et toi, nous y allons ensemble.", tip: "Aussi utilisé pour 'harmonie'" },
+                { hanzi: "咖啡", pinyin: "kā fēi", meaning: "café", decomposition: "咖 (kā) = 口 (kǒu) + 加 (jiā) ; 啡 (fēi) = 口 (kǒu) + 非 (fēi)", mnemonic: "Emprunt phonétique à l'anglais 'coffee'", example: "我想喝咖啡。", exampleTrans: "Je veux boire du café.", tip: "Mot composé de deux caractères, aucun sens littéral" },
+                { hanzi: "水", pinyin: "shuǐ", meaning: "eau", decomposition: "ressemble à un cours d'eau", mnemonic: "Les trois gouttes d'eau qui coulent", example: "请给我一杯水。", exampleTrans: "S'il vous plaît, donnez-moi un verre d'eau.", tip: "Radical 氵 dans beaucoup de mots" },
+                { hanzi: "汤", pinyin: "tāng", meaning: "soupe", decomposition: "氵(shuǐ: eau) + 汤(tāng: eau chaude)", mnemonic: "Eau chaude + assaisonnements = soupe", example: "这碗汤很好喝。", exampleTrans: "Cette soupe est très bonne.", tip: "La soupe chinoise est souvent servie en fin de repas" },
+                { hanzi: "热", pinyin: "rè", meaning: "chaud", decomposition: "执 (zhí: saisir) + 火 (huǒ: feu)", mnemonic: "Saisir le feu = chaud", example: "这杯水很热。", exampleTrans: "Ce verre d'eau est très chaud.", tip: "Opposé est 冷 (lěng: froid)" },
+                { hanzi: "米饭", pinyin: "mǐ fàn", meaning: "riz (cuit)", decomposition: "米 (mǐ: grain) + 饭 (fàn: repas)", mnemonic: "Le grain qui fait le repas = riz", example: "我每天吃米饭。", exampleTrans: "Je mange du riz chaque jour.", tip: "Nourriture de base, souvent servi à chaque repas" },
+                { hanzi: "粥", pinyin: "zhōu", meaning: "bouillie de riz, congee", decomposition: "弓(gōng: arc) + 米(mǐ: riz)", mnemonic: "Riz cuit longuement jusqu'à devenir une bouillie", example: "早上我喜欢喝粥。", exampleTrans: "Le matin, j'aime manger du congee.", tip: "Petit-déjeuner typique" },
+                { hanzi: "茶", pinyin: "chá", meaning: "thé", decomposition: "艹(cǎo: herbe) + 余(yú: reste)", mnemonic: "Herbe qui infuse = thé", example: "中国茶很好喝。", exampleTrans: "Le thé chinois est très bon.", tip: "Le thé vert 绿茶 (lǜ chá), thé noir 红茶 (hóng chá)" },
+                { hanzi: "豆腐", pinyin: "dòu fǔ", meaning: "tofu", decomposition: "豆 (dòu: haricot) + 腐 (fǔ: fermenté)", mnemonic: "Haricot fermenté = tofu", example: "麻婆豆腐很好吃。", exampleTrans: "Le tofu mapo est délicieux.", tip: "Le tofu a été inventé il y a plus de 2000 ans" },
+                { hanzi: "这是", pinyin: "zhè shì", meaning: "c'est", decomposition: "这 (zhè: ceci) + 是 (shì: être)", mnemonic: "Ceci + être = c'est", example: "这是我最喜欢的。", exampleTrans: "C'est mon préféré.", tip: "Très utile pour désigner quelque chose" }
+            ]
+        }
+    };
 
-const STORAGE_KEY = 'duo10_sr_v5';
-let cardStates = {};
-try { const s = localStorage.getItem(STORAGE_KEY); if (s) cardStates = JSON.parse(s); } catch(e) {}
-function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cardStates)); } catch(e) {} }
-function getCS(char) { return cardStates[char] || {errors:0,seen:0,mastered:false}; }
-function setCS(char, st) { cardStates[char] = st; saveState(); }
+    // Construction de la liste complète des cartes à partir des skills actifs
+    let allCards = [];
+    let activeSkills = { 1: true };  // skill 1 actif par défaut
+    let cards = [];
+    let currentIndex = 0;
+    let pinyinMode = true;
+    let definitionVisible = false;
+    let longPressTimer = null;
+    let isLongPressTriggered = false;
+    let isMouseDown = false;
+    let mouseDownX = 0;
+    let touchStartX = 0;
+    let touchCurrentX = 0;
+    let isSwiping = false;
 
-let selectedLessons = new Set();
-let activeCards = [];
-let deck=[], current=0, sessionKnown=0, sessionUnknown=0;
-let revealed=false, isSwiping=false, touchMoved=false;
-let touchStartX=0, touchStartY=0, touchCurrentX=0;
+    // DOM
+    const chineseEl = document.getElementById('chineseText');
+    const pinyinTop = document.getElementById('pinyinTop');
+    const pinyinDefLine = document.getElementById('pinyinDefLine');
+    const meaningDefLine = document.getElementById('meaningDefLine');
+    const cardEl = document.getElementById('card');
+    const cardZone = document.getElementById('cardZone');
+    const pinyinToggleBtn = document.getElementById('pinyinToggleBtn');
+    const statRemainingSpan = document.getElementById('statRemaining');
+    const statKnownSpan = document.getElementById('statKnown');
+    const swipeLeftIndicator = document.getElementById('swipeLeftIndicator');
+    const swipeRightIndicator = document.getElementById('swipeRightIndicator');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const skillListEl = document.getElementById('skillList');
+    const resetProgressBtn = document.getElementById('resetProgressBtn');
+    const modal = document.getElementById('lessonModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDecomp = document.getElementById('modalDecomp');
+    const modalMnemonic = document.getElementById('modalMnemonic');
+    const modalExample = document.getElementById('modalExample');
+    const modalExampleTrans = document.getElementById('modalExampleTrans');
+    const modalTip = document.getElementById('modalTip');
+    const tipSection = document.getElementById('tipSection');
+    const desktopGoodBtn = document.getElementById('desktopGoodBtn');
+    const desktopBadBtn = document.getElementById('desktopBadBtn');
 
-function renderMenu() {
-  const list = document.getElementById('lessonList');
-  list.innerHTML = '';
-  LESSONS.forEach(l => {
-    const row = document.createElement('div');
-    row.className = 'lesson-row';
-    const checked = selectedLessons.has(l.id);
-    row.innerHTML = `
-      <div class="lesson-info">
-        <div class="lesson-name">${l.name} — ${l.theme}</div>
-        <div class="lesson-count">${l.cards.length} mots</div>
-      </div>
-      <div class="checkbox ${checked?'checked':''}" id="cb_${l.id}"></div>
-    `;
-    row.addEventListener('click', () => toggleLesson(l.id));
-    list.appendChild(row);
-  });
-  updateStartBtn();
-}
+    // Construire la liste des cartes à partir des skills actifs
+    function buildCardList() {
+        allCards = [];
+        for (const [skillId, isActive] of Object.entries(activeSkills)) {
+            if (isActive && SKILLS[skillId]) {
+                const skillVocab = SKILLS[skillId].vocab;
+                for (let i = 0; i < skillVocab.length; i++) {
+                    allCards.push({
+                        id: `${skillId}_${i}`,
+                        skillId: parseInt(skillId),
+                        data: skillVocab[i],
+                        known: false,
+                        dueForReview: true
+                    });
+                }
+            }
+        }
+    }
 
-function toggleLesson(id) {
-  if (selectedLessons.has(id)) selectedLessons.delete(id);
-  else selectedLessons.add(id);
-  const cb = document.getElementById('cb_'+id);
-  if (cb) cb.className = 'checkbox'+(selectedLessons.has(id)?' checked':'');
-  updateStartBtn();
-}
+    // Charger progression depuis localStorage
+    function loadProgress() {
+        const stored = localStorage.getItem('mandarin_hsk1_progress');
+        if (stored) {
+            try {
+                const progress = JSON.parse(stored);
+                for (let i = 0; i < cards.length; i++) {
+                    const found = progress.find(p => p.id === cards[i].id);
+                    if (found) {
+                        cards[i].known = found.known;
+                        cards[i].dueForReview = found.dueForReview;
+                    }
+                }
+            } catch(e) {}
+        }
+    }
 
-function updateStartBtn() {
-  const btn = document.getElementById('startBtn');
-  const total = [...selectedLessons].reduce((acc, id) => {
-    const l = LESSONS.find(x=>x.id===id);
-    return acc + (l?l.cards.length:0);
-  }, 0);
-  btn.disabled = selectedLessons.size === 0;
-  btn.textContent = selectedLessons.size === 0 ? 'commencer' : 'commencer · '+total+' mots';
-}
+    function saveProgress() {
+        const toSave = cards.map(c => ({ id: c.id, known: c.known, dueForReview: c.dueForReview }));
+        localStorage.setItem('mandarin_hsk1_progress', JSON.stringify(toSave));
+        localStorage.setItem('mandarin_hsk1_activeSkills', JSON.stringify(activeSkills));
+    }
 
-document.getElementById('selectAllBtn').addEventListener('click', () => {
-  const allSelected = selectedLessons.size === LESSONS.length;
-  if (allSelected) { selectedLessons.clear(); document.getElementById('selectAllBtn').textContent = 'tout sélectionner'; }
-  else { LESSONS.forEach(l => selectedLessons.add(l.id)); document.getElementById('selectAllBtn').textContent = 'tout désélectionner'; }
-  renderMenu();
-});
+    function init() {
+        buildCardList();
+        cards = [...allCards];
+        const storedSkills = localStorage.getItem('mandarin_hsk1_activeSkills');
+        if (storedSkills) {
+            try {
+                const saved = JSON.parse(storedSkills);
+                activeSkills = saved;
+                buildCardList();
+                cards = [...allCards];
+            } catch(e) {}
+        }
+        loadProgress();
+        currentIndex = 0;
+        definitionVisible = false;
+        renderSkillList();
+        loadCurrentCard();
+    }
 
-document.getElementById('startBtn').addEventListener('click', startGame);
+    function renderSkillList() {
+        skillListEl.innerHTML = '';
+        for (const [skillId, skill] of Object.entries(SKILLS)) {
+            const isActive = activeSkills[skillId] || false;
+            const div = document.createElement('div');
+            div.className = 'skill-item';
+            div.innerHTML = `
+                <input type="checkbox" class="skill-checkbox" data-skill="${skillId}" ${isActive ? 'checked' : ''}>
+                <span class="skill-name">${skill.name}</span>
+                <span class="skill-count">${skill.vocab.length} mots</span>
+            `;
+            skillListEl.appendChild(div);
+        }
+        // Attacher événements
+        document.querySelectorAll('.skill-checkbox').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const skillId = parseInt(e.target.dataset.skill);
+                activeSkills[skillId] = e.target.checked;
+                saveProgress();
+                rebuildFromSkills();
+            });
+        });
+    }
 
-function startGame() {
-  activeCards = [];
-  LESSONS.forEach(l => {
-    if (selectedLessons.has(l.id)) l.cards.forEach(c => activeCards.push({...c, lesson: l.name+' '+l.theme}));
-  });
-  document.getElementById('menuScreen').style.display = 'none';
-  document.getElementById('gameScreen').classList.add('active');
-  document.getElementById('topBar').style.display = 'flex';
-  restart();
-}
+    function rebuildFromSkills() {
+        buildCardList();
+        const oldCards = cards;
+        cards = [...allCards];
+        // Préserver la progression des cartes qui existent déjà
+        for (let i = 0; i < cards.length; i++) {
+            const oldCard = oldCards.find(c => c.id === cards[i].id);
+            if (oldCard) {
+                cards[i].known = oldCard.known;
+                cards[i].dueForReview = oldCard.dueForReview;
+            }
+        }
+        saveProgress();
+        currentIndex = 0;
+        definitionVisible = false;
+        loadCurrentCard();
+    }
 
-function showMenu() {
-  document.getElementById('gameScreen').classList.remove('active');
-  document.getElementById('menuScreen').style.display = '';
-  document.getElementById('topBar').style.display = 'none';
-  document.getElementById('progressBar').style.width = '0%';
-  renderMenu();
-}
+    function getReviewQueue() {
+        return cards.filter(c => c.dueForReview === true);
+    }
 
-function buildDeck() {
-  const unmastered = activeCards.filter(c => !getCS(c.char).mastered);
-  if (unmastered.length === 0) return [...activeCards];
-  const weighted = [];
-  unmastered.forEach(c => {
-    const reps = Math.min((getCS(c.char).errors||0)+1, 4);
-    for (let i=0;i<reps;i++) weighted.push(c);
-  });
-  for (let i=weighted.length-1;i>0;i--) {
-    const j=Math.floor(Math.random()*(i+1));
-    [weighted[i],weighted[j]]=[weighted[j],weighted[i]];
-  }
-  return weighted.slice(0, Math.min(weighted.length, 25));
-}
+    function updateStats() {
+        const queue = getReviewQueue();
+        statRemainingSpan.innerText = queue.length;
+        statKnownSpan.innerText = cards.filter(c => c.known === true).length;
+    }
 
-function renderDots(errors) {
-  const el = document.getElementById('difficulty');
-  el.innerHTML = '';
-  for (let i=0;i<3;i++) {
-    const d = document.createElement('div');
-    d.className='dot'+(i<Math.min(errors,3)?' active':'');
-    el.appendChild(d);
-  }
-}
+    function loadCurrentCard() {
+        const queue = getReviewQueue();
+        if (queue.length === 0) {
+            chineseEl.innerText = "terminé";
+            pinyinTop.innerText = "";
+            pinyinDefLine.innerText = "";
+            meaningDefLine.innerText = "tout est révisé, modifie les paramètres pour ajouter des mots";
+            definitionVisible = false;
+            updateStats();
+            return;
+        }
+        if (currentIndex >= queue.length) currentIndex = 0;
+        const cardObj = queue[currentIndex];
+        const data = cardObj.data;
+        chineseEl.innerText = data.hanzi;
 
-function loadCard() {
-  if (current >= deck.length) { showDone(); return; }
-  const c = deck[current];
-  const st = getCS(c.char);
-  document.getElementById('char').textContent = c.char;
-  document.getElementById('pinyin').textContent = c.pinyin;
-  document.getElementById('trans').textContent = c.trans;
-  document.getElementById('lessonBadge').textContent = c.lesson;
-  const card = document.getElementById('card');
-  card.classList.remove('revealed');
-  card.style.transform=''; card.style.transition='';
-  document.getElementById('overlayLeft').style.opacity=0;
-  document.getElementById('overlayRight').style.opacity=0;
-  revealed=false; isSwiping=false; touchMoved=false;
-  renderDots(st.errors||0);
-  const mastered=activeCards.filter(c=>getCS(c.char).mastered).length;
-  document.getElementById('progressBar').style.width=Math.round(mastered/activeCards.length*100)+'%';
-  document.getElementById('counter').textContent=(current+1)+' / '+deck.length;
-  if (current>0){document.getElementById('stats').style.display='flex';document.getElementById('hint').style.display='none';}
-  document.getElementById('knownEl').textContent=sessionKnown;
-  document.getElementById('deckEl').textContent=deck.length-current;
-  document.getElementById('unknownEl').textContent=sessionUnknown;
-}
+        if (pinyinMode) {
+            pinyinTop.innerText = data.pinyin;
+            pinyinTop.style.display = 'block';
+            pinyinDefLine.style.display = 'none';
+            pinyinToggleBtn.classList.add('active');
+            pinyinToggleBtn.classList.remove('inactive');
+        } else {
+            pinyinTop.innerText = '';
+            pinyinTop.style.display = 'block';
+            pinyinDefLine.style.display = 'block';
+            pinyinToggleBtn.classList.remove('active');
+            pinyinToggleBtn.classList.add('inactive');
+        }
 
-function swipe(dir) {
-  const c=deck[current]; const st=getCS(c.char);
-  st.seen=(st.seen||0)+1;
-  if(dir>0){sessionKnown++;if((st.errors||0)===0&&st.seen>=2)st.mastered=true;else if((st.errors||0)>0)st.errors=Math.max(0,st.errors-1);}
-  else{sessionUnknown++;st.errors=(st.errors||0)+1;st.mastered=false;}
-  setCS(c.char,st);
-  const card=document.getElementById('card');
-  card.style.transition='transform 0.28s ease';
-  card.style.transform='translateX('+(dir>0?700:-700)+'px) rotate('+(dir*10)+'deg)';
-  current++; setTimeout(loadCard,290);
-}
+        if (!definitionVisible) {
+            meaningDefLine.innerText = '';
+            if (!pinyinMode) pinyinDefLine.innerText = '';
+        } else {
+            meaningDefLine.innerText = data.meaning;
+            if (!pinyinMode) pinyinDefLine.innerText = data.pinyin;
+        }
 
-function showDone() {
-  document.getElementById('cardArea').style.display='none';
-  document.getElementById('stats').style.display='none';
-  document.getElementById('hint').style.display='none';
-  const mastered=activeCards.filter(c=>getCS(c.char).mastered).length;
-  document.getElementById('doneScore').textContent=mastered+' / '+activeCards.length+' maîtrisés';
-  const toReview=activeCards.filter(c=>(getCS(c.char).errors||0)>0).length;
-  document.getElementById('doneSub').textContent=toReview>0?toReview+' carte(s) prioritaires à la prochaine session.':'Excellent ! Revenez demain pour consolider.';
-  document.getElementById('reviewBtn').style.display=toReview>0?'':'none';
-  document.getElementById('doneScreen').classList.add('visible');
-}
+        updateStats();
+    }
 
-function restart() {
-  current=0;sessionKnown=0;sessionUnknown=0;revealed=false;
-  deck=buildDeck();
-  document.getElementById('cardArea').style.display='';
-  document.getElementById('hint').style.display='';
-  document.getElementById('stats').style.display='none';
-  document.getElementById('doneScreen').classList.remove('visible');
-  loadCard();
-}
+    function markAsKnown() {
+        const queue = getReviewQueue();
+        if (queue.length === 0) return;
+        const currentCardObj = queue[currentIndex];
+        const originalCard = cards.find(c => c.id === currentCardObj.id);
+        if (originalCard) {
+            originalCard.known = true;
+            originalCard.dueForReview = false;
+        }
+        saveProgress();
+        const newQueue = getReviewQueue();
+        if (currentIndex >= newQueue.length) currentIndex = 0;
+        definitionVisible = false;
+        loadCurrentCard();
+    }
 
-const card=document.getElementById('card');
-card.addEventListener('touchstart',function(e){
-  touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY;
-  touchCurrentX=touchStartX;isSwiping=false;touchMoved=false;
-},{passive:true});
-card.addEventListener('touchmove',function(e){
-  e.preventDefault();
-  const dx=e.touches[0].clientX-touchStartX;
-  const dy=e.touches[0].clientY-touchStartY;
-  touchCurrentX=e.touches[0].clientX;
-  if(Math.abs(dx)>8||Math.abs(dy)>8)touchMoved=true;
-  if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy))isSwiping=true;
-  if(!isSwiping)return;
-  card.style.transition='none';
-  card.style.transform='translateX('+dx+'px) rotate('+(dx*0.04)+'deg)';
-  const pct=Math.min(Math.abs(dx)/90,1);
-  document.getElementById(dx<0?'overlayLeft':'overlayRight').style.opacity=pct*0.9;
-  document.getElementById(dx<0?'overlayRight':'overlayLeft').style.opacity=0;
-},{passive:false});
-card.addEventListener('touchend',function(){
-  const dx=touchCurrentX-touchStartX;
-  if(!touchMoved){revealed=!revealed;card.classList.toggle('revealed',revealed);return;}
-  if(isSwiping&&Math.abs(dx)>90)swipe(dx>0?1:-1);
-  else{card.style.transition='transform 0.2s';card.style.transform='';document.getElementById('overlayLeft').style.opacity=0;document.getElementById('overlayRight').style.opacity=0;}
-  isSwiping=false;touchMoved=false;
-},{passive:true});
+    function markAsUnknown() {
+        const queue = getReviewQueue();
+        if (queue.length === 0) return;
+        const currentCardObj = queue[currentIndex];
+        const originalCard = cards.find(c => c.id === currentCardObj.id);
+        if (originalCard) {
+            originalCard.known = false;
+            originalCard.dueForReview = true;
+        }
+        saveProgress();
+        const newQueue = getReviewQueue();
+        if (newQueue.length > 1) {
+            const moved = newQueue[currentIndex];
+            const filtered = newQueue.filter((_, idx) => idx !== currentIndex);
+            filtered.push(moved);
+            const idsOrder = filtered.map(c => c.id);
+            const newCardsOrder = [];
+            for (let id of idsOrder) {
+                const found = cards.find(c => c.id === id);
+                if (found) newCardsOrder.push(found);
+            }
+            const knownCards = cards.filter(c => c.known === true && !c.dueForReview);
+            cards = [...newCardsOrder, ...knownCards];
+            saveProgress();
+            currentIndex = 0;
+        }
+        definitionVisible = false;
+        loadCurrentCard();
+    }
 
-document.getElementById('themeBtn').addEventListener('click',function(){
-  document.getElementById('app').classList.toggle('light');
-  this.textContent=document.getElementById('app').classList.contains('light')?'● sombre':'☀ clair';
-});
-document.getElementById('menuBtn').addEventListener('click',showMenu);
-document.getElementById('restartBtn').addEventListener('click',restart);
-document.getElementById('reviewBtn').addEventListener('click',restart);
-document.getElementById('backBtn').addEventListener('click',showMenu);
+    function hideSwipeIndicators() {
+        swipeLeftIndicator.style.width = '0px';
+        swipeRightIndicator.style.width = '0px';
+    }
 
-renderMenu();
+    function showLessonModal() {
+        const queue = getReviewQueue();
+        if (queue.length === 0) return;
+        const cardObj = queue[currentIndex];
+        const d = cardObj.data;
+        modalTitle.innerText = d.hanzi + ' · leçon';
+        modalDecomp.innerText = d.decomposition || '-';
+        modalMnemonic.innerText = d.mnemonic || '-';
+        modalExample.innerText = d.example || '-';
+        modalExampleTrans.innerText = d.exampleTrans || '-';
+        if (d.tip && d.tip.trim() !== '') {
+            modalTip.innerText = d.tip;
+            tipSection.style.display = 'block';
+        } else {
+            tipSection.style.display = 'none';
+        }
+        modal.classList.add('visible');
+    }
+
+    // TOUCH / SWIPE
+    function onTouchStart(e) {
+        e.preventDefault();
+        const rect = cardZone.getBoundingClientRect();
+        const touch = e.touches[0];
+        touchStartX = touch.clientX - rect.left;
+        isSwiping = true;
+        touchCurrentX = touchStartX;
+        longPressTimer = setTimeout(() => {
+            isLongPressTriggered = true;
+            showLessonModal();
+        }, 500);
+    }
+
+    function onTouchMove(e) {
+        if (!isSwiping) return;
+        e.preventDefault();
+        const rect = cardZone.getBoundingClientRect();
+        const touch = e.touches[0];
+        const currentX = touch.clientX - rect.left;
+        touchCurrentX = currentX;
+        const deltaX = currentX - touchStartX;
+        if (longPressTimer) clearTimeout(longPressTimer);
+        if (deltaX > 8) {
+            swipeRightIndicator.style.width = Math.min(0.5, deltaX / 150) * 80 + 'px';
+            swipeLeftIndicator.style.width = '0px';
+        } else if (deltaX < -8) {
+            swipeLeftIndicator.style.width = Math.min(0.5, Math.abs(deltaX) / 150) * 80 + 'px';
+            swipeRightIndicator.style.width = '0px';
+        } else {
+            hideSwipeIndicators();
+        }
+    }
+
+    function onTouchEnd(e) {
+        if (longPressTimer) clearTimeout(longPressTimer);
+        if (isLongPressTriggered) {
+            isLongPressTriggered = false;
+            isSwiping = false;
+            hideSwipeIndicators();
+            return;
+        }
+        if (!isSwiping) return;
+        e.preventDefault();
+        const deltaX = touchCurrentX - touchStartX;
+        if (Math.abs(deltaX) > 40) {
+            if (deltaX > 0) markAsKnown();
+            else markAsUnknown();
+        }
+        isSwiping = false;
+        hideSwipeIndicators();
+    }
+
+    // MOUSE
+    function onMouseDown(e) {
+        e.preventDefault();
+        isMouseDown = true;
+        mouseDownX = e.clientX;
+        longPressTimer = setTimeout(() => {
+            if (isMouseDown) {
+                isLongPressTriggered = true;
+                showLessonModal();
+            }
+        }, 500);
+    }
+
+    function onMouseMove(e) {
+        if (!isMouseDown) return;
+        if (longPressTimer) clearTimeout(longPressTimer);
+        const deltaX = e.clientX - mouseDownX;
+        if (deltaX > 20) {
+            hideSwipeIndicators();
+            markAsKnown();
+            isMouseDown = false;
+        } else if (deltaX < -20) {
+            hideSwipeIndicators();
+            markAsUnknown();
+            isMouseDown = false;
+        }
+    }
+
+    function onMouseUp(e) {
+        if (longPressTimer) clearTimeout(longPressTimer);
+        if (!isLongPressTriggered && isMouseDown) {
+            const deltaX = e.clientX - mouseDownX;
+            if (Math.abs(deltaX) < 10) {
+                onCardClick();
+            }
+        }
+        isLongPressTriggered = false;
+        isMouseDown = false;
+        hideSwipeIndicators();
+    }
+
+    function onCardClick() {
+        const queue = getReviewQueue();
+        if (queue.length === 0) return;
+        definitionVisible = !definitionVisible;
+        loadCurrentCard();
+    }
+
+    function togglePinyinMode() {
+        pinyinMode = !pinyinMode;
+        definitionVisible = false;
+        loadCurrentCard();
+    }
+
+    function resetAllProgress() {
+        for (let i = 0; i < cards.length; i++) {
+            cards[i].known = false;
+            cards[i].dueForReview = true;
+        }
+        saveProgress();
+        currentIndex = 0;
+        definitionVisible = false;
+        loadCurrentCard();
+    }
+
+    function openSettings() {
+        renderSkillList();
+        settingsOverlay.classList.add('visible');
+        settingsPanel.classList.add('visible');
+    }
+
+    function closeSettings() {
+        settingsOverlay.classList.remove('visible');
+        settingsPanel.classList.remove('visible');
+    }
+
+    function bindEvents() {
+        cardZone.addEventListener('touchstart', onTouchStart, { passive: false });
+        cardZone.addEventListener('touchmove', onTouchMove, { passive: false });
+        cardZone.addEventListener('touchend', onTouchEnd);
+        cardEl.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+        pinyinToggleBtn.addEventListener('click', togglePinyinMode);
+        settingsBtn.addEventListener('click', openSettings);
+        closeSettingsBtn.addEventListener('click', closeSettings);
+        settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) closeSettings(); });
+        resetProgressBtn.addEventListener('click', () => { resetAllProgress(); closeSettings(); });
+        closeModalBtn.addEventListener('click', () => modal.classList.remove('visible'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('visible'); });
+        if (desktopGoodBtn) desktopGoodBtn.addEventListener('click', () => markAsKnown());
+        if (desktopBadBtn) desktopBadBtn.addEventListener('click', () => markAsUnknown());
+    }
+
+    function start() {
+        bindEvents();
+        init();
+    }
+
+    start();
 </script>
 </body>
 </html>
