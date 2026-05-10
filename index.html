@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="HSK1 Flash">
 <title>HSK1 Flashcards</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; }
-html, body { height: 100%; background: #000; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+html, body { height: 100%; background: #000; overflow: hidden; }
 .app {
   background: #000;
   height: 100vh;
@@ -19,8 +19,6 @@ html, body { height: 100%; background: #000; }
   justify-content: center;
   position: relative;
   overflow: hidden;
-  user-select: none;
-  touch-action: none;
   transition: background 0.3s;
 }
 .app.light { background: #fff; }
@@ -59,32 +57,23 @@ html, body { height: 100%; background: #000; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: grab;
   border: 1px solid rgba(255,255,255,0.05);
   will-change: transform;
 }
 .app.light .card { background: #f4f4f4; border-color: rgba(0,0,0,0.05); }
 .lesson-badge {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 14px; left: 14px;
   font-size: 10px;
   color: rgba(255,255,255,0.2);
-  letter-spacing: 0.3px;
 }
 .app.light .lesson-badge { color: rgba(0,0,0,0.18); }
 .difficulty {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  display: flex;
-  gap: 4px;
+  top: 14px; right: 14px;
+  display: flex; gap: 4px;
 }
-.dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.12);
-}
+.dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.12); }
 .app.light .dot { background: rgba(0,0,0,0.1); }
 .dot.active { background: #c0392b; }
 .char {
@@ -93,6 +82,7 @@ html, body { height: 100%; background: #000; }
   line-height: 1;
   color: #fff;
   margin-bottom: 24px;
+  pointer-events: none;
 }
 .app.light .char { color: #000; }
 .pinyin {
@@ -101,12 +91,14 @@ html, body { height: 100%; background: #000; }
   margin-bottom: 10px;
   color: #111;
   transition: color 0.25s;
+  pointer-events: none;
 }
 .app.light .pinyin { color: #f4f4f4; }
 .translation {
   font-size: 15px;
   color: #111;
   transition: color 0.25s;
+  pointer-events: none;
 }
 .app.light .translation { color: #f4f4f4; }
 .card.revealed .pinyin { color: rgba(255,255,255,0.7); }
@@ -114,29 +106,18 @@ html, body { height: 100%; background: #000; }
 .app.light .card.revealed .pinyin { color: rgba(0,0,0,0.6); }
 .app.light .card.revealed .translation { color: rgba(0,0,0,0.38); }
 .overlay-left, .overlay-right {
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  opacity: 0;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
+  position: absolute; inset: 0; border-radius: 20px;
+  opacity: 0; pointer-events: none; display: flex; align-items: center;
 }
 .overlay-left { background: #c0392b; justify-content: flex-start; padding-left: 28px; }
 .overlay-right { background: #27ae60; justify-content: flex-end; padding-right: 28px; }
-.overlay-icon { font-size: 32px; color: rgba(255,255,255,0.95); }
+.overlay-icon { font-size: 32px; color: rgba(255,255,255,0.95); pointer-events: none; }
 .hint {
-  margin-top: 24px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.18);
-  text-align: center;
+  margin-top: 24px; font-size: 11px;
+  color: rgba(255,255,255,0.18); text-align: center;
 }
 .app.light .hint { color: rgba(0,0,0,0.18); }
-.stats {
-  margin-top: 24px;
-  display: none;
-  gap: 32px;
-}
+.stats { margin-top: 24px; display: none; gap: 32px; }
 .stat { text-align: center; }
 .stat-num { font-size: 22px; font-weight: 500; color: #fff; }
 .app.light .stat-num { color: #000; }
@@ -146,20 +127,14 @@ html, body { height: 100%; background: #000; }
 .stat-num.red { color: #c0392b; }
 .stat-num.amber { color: #e67e22; }
 .progress {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 2px;
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
   background: rgba(255,255,255,0.06);
 }
 .app.light .progress { background: rgba(0,0,0,0.06); }
 .progress-bar { height: 100%; background: #27ae60; transition: width 0.4s; }
 .done-screen {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 24px;
-  text-align: center;
+  display: none; flex-direction: column;
+  align-items: center; gap: 16px; padding: 24px; text-align: center;
 }
 .done-screen.visible { display: flex; }
 .done-score { font-size: 24px; font-weight: 500; color: #fff; }
@@ -167,15 +142,11 @@ html, body { height: 100%; background: #000; }
 .done-sub { font-size: 13px; color: rgba(255,255,255,0.35); max-width: 280px; line-height: 1.6; }
 .app.light .done-sub { color: rgba(0,0,0,0.35); }
 .btn {
-  margin-top: 4px;
-  background: none;
+  margin-top: 4px; background: none;
   border: 1px solid rgba(255,255,255,0.2);
   color: rgba(255,255,255,0.65);
-  padding: 12px 28px;
-  border-radius: 28px;
-  font-size: 13px;
-  cursor: pointer;
-  -webkit-appearance: none;
+  padding: 12px 28px; border-radius: 28px;
+  font-size: 13px; cursor: pointer; -webkit-appearance: none;
 }
 .app.light .btn { border-color: rgba(0,0,0,0.18); color: rgba(0,0,0,0.55); }
 </style>
@@ -200,7 +171,7 @@ html, body { height: 100%; background: #000; }
     </div>
   </div>
 
-  <div class="hint" id="hint">appuyer pour révéler · glisser pour juger</div>
+  <div class="hint" id="hint">toucher pour révéler · glisser pour juger</div>
   <div class="stats" id="stats">
     <div class="stat"><div class="stat-num green" id="knownEl">0</div><div class="stat-label">maîtrisés</div></div>
     <div class="stat"><div class="stat-num amber" id="deckEl">0</div><div class="stat-label">restants</div></div>
@@ -283,7 +254,7 @@ const ALL_CARDS = [
   {char:'还是',pinyin:'hái shì',trans:'ou bien',lesson:'L10 — Sports'},
 ];
 
-const STORAGE_KEY = 'duo10_sr_v2';
+const STORAGE_KEY = 'duo10_sr_v3';
 let cardStates = {};
 try { const s = localStorage.getItem(STORAGE_KEY); if (s) cardStates = JSON.parse(s); } catch(e) {}
 
@@ -292,7 +263,9 @@ function getCS(char) { return cardStates[char] || {errors:0,seen:0,mastered:fals
 function setCS(char, st) { cardStates[char] = st; saveState(); }
 
 let deck=[], current=0, sessionKnown=0, sessionUnknown=0;
-let revealed=false, dragging=false, startX=0, currentDX=0;
+let revealed=false;
+let touchStartX=0, touchStartY=0, touchCurrentX=0;
+let isSwiping=false, touchMoved=false;
 
 function buildDeck() {
   const unmastered = ALL_CARDS.filter(c => !getCS(c.char).mastered);
@@ -319,6 +292,12 @@ function renderDots(errors) {
   }
 }
 
+function updateStats() {
+  document.getElementById('knownEl').textContent = sessionKnown;
+  document.getElementById('deckEl').textContent = deck.length - current;
+  document.getElementById('unknownEl').textContent = sessionUnknown;
+}
+
 function loadCard() {
   if (current >= deck.length) { showDone(); return; }
   const c = deck[current];
@@ -334,14 +313,17 @@ function loadCard() {
   document.getElementById('overlayLeft').style.opacity = 0;
   document.getElementById('overlayRight').style.opacity = 0;
   revealed = false;
+  isSwiping = false;
+  touchMoved = false;
   renderDots(st.errors||0);
   const mastered = ALL_CARDS.filter(c=>getCS(c.char).mastered).length;
   document.getElementById('progressBar').style.width = Math.round(mastered/ALL_CARDS.length*100)+'%';
   document.getElementById('counter').textContent = (current+1)+' / '+deck.length;
-  if (current > 0) { document.getElementById('stats').style.display='flex'; document.getElementById('hint').style.display='none'; }
-  document.getElementById('knownEl').textContent = sessionKnown;
-  document.getElementById('deckEl').textContent = deck.length-current;
-  document.getElementById('unknownEl').textContent = sessionUnknown;
+  if (current > 0) {
+    document.getElementById('stats').style.display = 'flex';
+    document.getElementById('hint').style.display = 'none';
+  }
+  updateStats();
 }
 
 function swipe(dir) {
@@ -381,59 +363,63 @@ function showDone() {
 }
 
 const card = document.getElementById('card');
-card.addEventListener('mousedown', e=>{ startX=e.clientX;dragging=false;currentDX=0; });
-document.addEventListener('mousemove', e=>{
-  if(e.buttons!==1)return;
-  const dx=e.clientX-startX;
-  if(Math.abs(dx)>6)dragging=true;
-  if(!dragging)return;
-  currentDX=dx;
-  card.style.transition='none';
-  card.style.transform='translateX('+dx+'px) rotate('+(dx*0.04)+'deg)';
-  const pct=Math.min(Math.abs(dx)/90,1);
-  document.getElementById(dx<0?'overlayLeft':'overlayRight').style.opacity=pct*0.9;
-  document.getElementById(dx<0?'overlayRight':'overlayLeft').style.opacity=0;
-});
-document.addEventListener('mouseup', e=>{
-  if(!dragging)return;
-  const dx=e.clientX-startX;
-  if(Math.abs(dx)>90)swipe(dx>0?1:-1);
-  else{card.style.transition='transform 0.2s';card.style.transform='';document.getElementById('overlayLeft').style.opacity=0;document.getElementById('overlayRight').style.opacity=0;}
-  setTimeout(()=>{dragging=false;},60);
-});
-card.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;dragging=false;currentDX=0;},{passive:true});
-card.addEventListener('touchmove',e=>{
-  const dx=e.touches[0].clientX-startX;
-  if(Math.abs(dx)>6)dragging=true;
-  if(!dragging)return;
-  currentDX=dx;
-  card.style.transition='none';
-  card.style.transform='translateX('+dx+'px) rotate('+(dx*0.04)+'deg)';
-  const pct=Math.min(Math.abs(dx)/90,1);
-  document.getElementById(dx<0?'overlayLeft':'overlayRight').style.opacity=pct*0.9;
-  document.getElementById(dx<0?'overlayRight':'overlayLeft').style.opacity=0;
-},{passive:true});
-card.addEventListener('touchend', e => {
+
+card.addEventListener('touchstart', function(e) {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchCurrentX = touchStartX;
+  isSwiping = false;
+  touchMoved = false;
+}, {passive: true});
+
+card.addEventListener('touchmove', function(e) {
   e.preventDefault();
-  if(!dragging){revealed=!revealed;card.classList.toggle('revealed',revealed);return;}
-  if(Math.abs(currentDX)>90)swipe(currentDX>0?1:-1);
-  else{card.style.transition='transform 0.2s';card.style.transform='';document.getElementById('overlayLeft').style.opacity=0;document.getElementById('overlayRight').style.opacity=0;}
-  dragging=false;
-});
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+  touchCurrentX = e.touches[0].clientX;
+  if (Math.abs(dx) > 8 || Math.abs(dy) > 8) touchMoved = true;
+  if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) isSwiping = true;
+  if (!isSwiping) return;
+  card.style.transition = 'none';
+  card.style.transform = 'translateX('+dx+'px) rotate('+(dx*0.04)+'deg)';
+  const pct = Math.min(Math.abs(dx)/90, 1);
+  document.getElementById(dx<0?'overlayLeft':'overlayRight').style.opacity = pct*0.9;
+  document.getElementById(dx<0?'overlayRight':'overlayLeft').style.opacity = 0;
+}, {passive: false});
 
+card.addEventListener('touchend', function(e) {
+  const dx = touchCurrentX - touchStartX;
+  if (!touchMoved) {
+    revealed = !revealed;
+    card.classList.toggle('revealed', revealed);
+    return;
+  }
+  if (isSwiping && Math.abs(dx) > 90) {
+    swipe(dx > 0 ? 1 : -1);
+  } else {
+    card.style.transition = 'transform 0.2s';
+    card.style.transform = '';
+    document.getElementById('overlayLeft').style.opacity = 0;
+    document.getElementById('overlayRight').style.opacity = 0;
+  }
+  isSwiping = false;
+  touchMoved = false;
+}, {passive: true});
 
-document.getElementById('themeBtn').addEventListener('click',()=>{
+document.getElementById('themeBtn').addEventListener('click', function() {
   document.getElementById('app').classList.toggle('light');
-  document.getElementById('themeBtn').textContent=document.getElementById('app').classList.contains('light')?'● sombre':'☀ clair';
+  this.textContent = document.getElementById('app').classList.contains('light') ? '● sombre' : '☀ clair';
 });
-document.getElementById('restartBtn').addEventListener('click',()=>{
-  Object.keys(cardStates).forEach(k=>{cardStates[k]={errors:0,seen:0,mastered:false};});
-  saveState();restart();
-});
-document.getElementById('reviewBtn').addEventListener('click',restart);
 
-function restart(){
-  current=0;sessionKnown=0;sessionUnknown=0;revealed=false;
+document.getElementById('restartBtn').addEventListener('click', function() {
+  Object.keys(cardStates).forEach(k => { cardStates[k]={errors:0,seen:0,mastered:false}; });
+  saveState(); restart();
+});
+
+document.getElementById('reviewBtn').addEventListener('click', restart);
+
+function restart() {
+  current=0; sessionKnown=0; sessionUnknown=0; revealed=false;
   deck=buildDeck();
   document.getElementById('cardArea').style.display='';
   document.getElementById('hint').style.display='';
